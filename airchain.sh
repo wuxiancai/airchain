@@ -277,7 +277,7 @@ done
 EOF
 
 #后台运行刷tx脚本
-nohub bash spam.sh &
+nohup bash spam.sh &
 
 }
 
