@@ -224,10 +224,10 @@ NODE_ID=$(grep 'node_id =' $CONFIG_PATH | awk -F'"' '{print $2}')
 
 
 # 获取本机 IP 地址
-LOCAL_IP=$(curl -s4 ifconfig.me/ip)
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 
 # 定义 JSON RPC URL 和其他参数
-JSON_RPC="https://airchains-rpc.kubenode.xyz/"
+JSON_RPC="https://airchains-testnet-rpc.cosmonautstakes.com"
 INFO="EVM Track"
 TRACKS="air_address"
 BOOTSTRAP_NODE="/ip4/$LOCAL_IP/tcp/2300/p2p/$NODE_ID"
@@ -236,18 +236,13 @@ BOOTSTRAP_NODE="/ip4/$LOCAL_IP/tcp/2300/p2p/$NODE_ID"
 create_station_cmd="go run cmd/main.go create-station \
     --accountName wallet \
     --accountPath $HOME/.tracks/junction-accounts/keys \
-    --jsonRPC \"$JSON_RPC" \
+    --jsonRPC \"https://airchains-testnet-rpc.cosmonautstakes.com\" \
     --info \"WASM Track\" \
     --tracks \"$AIR_ADDRESS\" \
     --bootstrapNode \"/ip4/$LOCAL_IP/tcp/2300/p2p/$NODE_ID\""
 
 echo "Running command:"
 echo "$create_station_cmd"
-
-#修改代码默认的gas price
-#sed -i 's/gasFees := fmt.Sprintf("%damf", gas)/gasFees := fmt.Sprintf("%damf", 2*gas)/' "$HOME/tracks/junction/verifyPod.go"
-#sed -i 's/gasFees := fmt.Sprintf("%damf", gas)/gasFees := fmt.Sprintf("%damf", 2*gas)/' "$HOME/tracks/junction/validateVRF.go"
-#sed -i 's/gasFees := fmt.Sprintf("%damf", gas)/gasFees := fmt.Sprintf("%damf", 3*gas)/' "$HOME/tracks/junction/submitPod.go"
 
 # 执行命令
 eval "$create_station_cmd"
@@ -269,18 +264,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable stationd
 sudo systemctl restart stationd
 }
-# 刷TX
-cd
-addr=$($HOME/wasm-station/build/wasmstationd keys show node --keyring-backend test -a)
-sudo tee spam.sh > /dev/null << EOF
-#!/bin/bash
-while true; do
-  $HOME/wasm-station/build/wasmstationd tx bank send node ${addr} 1stake --from node --chain-id station-1 --keyring-backend test -y 
-  sleep 6  # Add a sleep to avoid overwhelming the system or network
-done
-EOF
-# 后台运行刷tx脚本
-bash spam.sh &
+
+
 
 function evmos_log(){
     journalctl -u evmosd -f
